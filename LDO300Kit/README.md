@@ -1,11 +1,11 @@
 # Klipper backup of Mosquito_Broker
-Backup for configuration files for the Mosquito Web server and Main web pages for my different 3D Printers
+Backup for configuration files for the Mosquitto Webserver and Main web pages for my different 3D Printers
 
 ---
 
-The [Index file for LDO 300 Kit](/LDO300Kit/index.html) is the page that is displayed for the LDO 300 Kit build.
+The Index.html file is the page that is displayed for the LDO 300 Kit build.
 
-The following pictures show you how the LDO 300 Kit web page looks like:
+The following pictures shows you how the LDO 300 Kit web page looks like:
 
 ![section 1](images/Section_1.jpg)
 
