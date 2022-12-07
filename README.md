@@ -1,4 +1,4 @@
-# Klipper backup of My Different 3D Printer Control Web Pages
+## Klipper Backup of My Different 3D Printers Control Web Pages
 
 I wanted a way to control the Tasmota power modules on my 3D printers and a way to access different
 URL addresses that help me configure the corresponding printer.
@@ -12,10 +12,10 @@ Resources I used to install the NGINX web server and the Mosquito broker:
 4. [SAMBA Setup - GCODE File Network Share Setup](https://github.com/rkolbi/voron2.4/tree/main/MY_V24-350#samba-setup---gcode-file-network-share-setup)
 
 ---
-## Klipper backup of the LDO 300 Kit Build Web Page Server
+## Klipper Backup of the "LDO 300 Kit" Build Web Page Server
 
-The files for the LDO 300 kit is located in the [LDO300Kit folder](/LDO300Kit/)
+The files for the "LDO 300 kit" is located in the [LDO300Kit folder](/LDO300Kit/)
 
-Here is the first section of the LDO 300 Kit web page:
+Here is the first section of the "LDO 300 Kit" web page:
 
-![section 1](images/Section_1.jpg)
+![section 1](/LDO300Kit/images/Section_1.jpg)

@@ -1,5 +1,6 @@
-# Klipper backup of the LDO 300 Kit Build Web Page Server
-Backup for configuration files for the LDO 300 Kit Build Web Page
+# Klipper Backup of the "LDO 300 Kit" Web Page Server
+
+Backup for configuration files for the "LDO 300 Kit" Build 
 
 ---
 
