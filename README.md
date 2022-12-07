@@ -12,6 +12,13 @@ Resources I used to install the NGINX web server and the Mosquito broker:
 4. [SAMBA Setup - GCODE File Network Share Setup](https://github.com/rkolbi/voron2.4/tree/main/MY_V24-350#samba-setup---gcode-file-network-share-setup)
 
 ---
+## Main Web Page for All GadgetAngel 3D Printers
+
+Here is a picture of the Main Web Page that is used to contain all the URL links to GadgetAngel's 3D Printers Web Control Pages:
+
+![mainpage](/images/MainPrinterPage.jpg)
+
+---
 ## Klipper Backup of the "LDO 300 Kit" Build Web Page Server
 
 The files for the "LDO 300 kit" is located in the [LDO300Kit folder](/LDO300Kit/)
