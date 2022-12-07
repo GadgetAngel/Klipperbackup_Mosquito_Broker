@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+<title>GadgetAngel's 3D Printers Control Pages</title>
+<head>
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+  <!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.css" /> -->
+  <link rel="stylesheet" href="jquery.mobile-1.4.0.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+</head>
+
+<style>
+  h1, h4 {text-align: center;}
+  span {font-weight: bold;}
+  table, th, td {
+  border: 5px solid white;
+  border-collapse: collapse;
+</style>
+
+<body>
+<script type="text/javascript">// <![CDATA[
+<!-- add addition web links below -->
+
+$(document).ready(function(){
+   $("#ldo300kit-btn").click(function(){
+        window.open('http://192.168.1.172/LDO300Kit/ldo300kit.html', '_blank');
+    });
+});
+</script>
+
+  <div data-role="page" data-theme="b">  
+    <div data-role="header" data-theme="b">
+      <div><h1 style="text-align:center">GadgetAngel's 3D Printers Control Pages</h2></div>
+    </div>
+    <div data-role="header" data-theme="b">
+      <div><h2>&nbsp;&nbsp;GO TO Different 3D Printer's Control Page:</h2></div>
+    </div>
+    <div data-role="content" align="center">
+      <br />
+      <br />
+      <form>
+      <!-- This table contains the command buttons -->
+        <table width="75%" style="background-color:#87adde">
+                <tbody>
+                       <tr>
+                               <td><a href="#" data-role="button" data-icon="gear" id="ldo300kit-btn"> Go to LDO 300 kit's Control UI Page </a></td>
+                       </tr>
+                </tbody>
+        </table>
+      </form>
+      <br />
+      <br />
+      <br />   
+    </div>
+   </div>
+ </body>
+</html>
