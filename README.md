@@ -16,7 +16,7 @@ Resources I used to install the NGINX web server and the Mosquito broker:
 
 Here is a picture of the Main Web Page that is used to contain all the URL links to GadgetAngel's 3D Printers Web Control Pages:
 
-![mainpage](/images/MainPrinterPage.jpg)
+![mainpage](/my_images/MainPrinterPage.jpg)
 
 ---
 ## Klipper Backup of the "LDO 300 Kit" Build Web Page Server
@@ -25,4 +25,4 @@ The files for the "LDO 300 kit" is located in the [LDO300Kit folder](/LDO300Kit/
 
 Here is the first section of the "LDO 300 Kit" web page:
 
-![section 1](/LDO300Kit/images/Section_1.jpg)
+![section 1](/LDO300Kit/my_images/Section_1.jpg)
