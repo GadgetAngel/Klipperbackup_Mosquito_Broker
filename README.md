@@ -10,6 +10,21 @@ Resources I used to install the NGINX web server and the Mosquito broker:
 2. [Testing Mosquitto Broker and Client on Raspberry Pi](https://randomnerdtutorials.com/testing-mosquitto-broker-and-client-on-raspbbery-pi/)
 3. [Build your own Raspberry Pi NGINX Web Server](https://pimylifeup.com/raspberry-pi-nginx/)
 4. [SAMBA Setup - GCODE File Network Share Setup](https://github.com/rkolbi/voron2.4/tree/main/MY_V24-350#samba-setup---gcode-file-network-share-setup)
+5. [The Solution to my CORS problem](https://gist.github.com/Stanback/7145487?permalink_comment_id=2824437#gistcomment-2824437)
+6. [CORS setup for NGINX and PHP](https://gist.github.com/alexjs/4165271?permalink_comment_id=3373430#gistcomment-3373430)
+
+For the mosquito broker server :
+```
+$ sudo nano /etc/nginx/sites-enabled/default
+$ sudo nginx -t && sudo service php7.4-fpm restart && sudo service nginx restart
+```
+
+for the LDOkit :
+```
+$ sudo nano /etc/nginx/sites-available/resetrp2040.local.conf
+$ sudo nginx -t && sudo service php7.4-fpm restart && sudo service nginx restart
+``` 
+
 
 ---
 ## Main Web Page for All GadgetAngel 3D Printers
