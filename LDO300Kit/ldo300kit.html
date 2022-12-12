@@ -17,9 +17,17 @@
   border-collapse: collapse;
 </style>
 
+<!-- perform the following command after you make changes to this file:  -->
+<!-- sudo nginx -t && sudo service php7.4-fpm restart && sudo service nginx restart -->
+
 <body>
 <script type="text/javascript">// <![CDATA[
 <!-- add addition web links below -->
+$(document).ready(function(){
+   $("#jschuh-btn").click(function(){
+        window.open('https://github.com/jschuh/klipper-macros', '_blank');
+    });
+});
 $(document).ready(function(){
    $("#AndrewEllis93-btn").click(function(){
         window.open('https://github.com/AndrewEllis93/v2.247_backup_klipper_config', '_blank');
@@ -251,7 +259,7 @@ $(document).ready(function(){
       <br />   
     </div>
     <div data-role="header" data-theme="b">
-      <div><h2>&nbsp;&nbsp;GO TO Different Resource Web Pages:</h2></div>
+      <div><h2>&nbsp;&nbsp;GO TO Different Klipper Configuration Resource Web Pages:</h2></div>
     </div>
     <div data-role="content" align="center">
       <br />
@@ -292,6 +300,9 @@ $(document).ready(function(){
                        </tr>
                        <tr>
                                <td><a href="#" data-role="button" data-icon="gear" id="print-tuning-guide-btn"> AndrewEllis93 Voron Print Tuning Guide </a></td>
+                       </tr>
+                       <tr>
+                               <td><a href="#" data-role="button" data-icon="gear" id="jschuh-btn"> jschuh Klipper Macros </a></td>
                        </tr>
                        <tr>
                                <td><a href="#" data-role="button" data-icon="gear" id="generic-klipper-config-btn"> Frix-x Generic Klipper Configuration </a></td>
