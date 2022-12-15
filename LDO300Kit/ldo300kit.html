@@ -277,6 +277,7 @@
   border-collapse: collapse;}
   .bold { font-weight: bold; }
   .red { color: #FF0000; }
+  .blck { color: #1B2631; }
   .yellow-background { background-color: Yellow; }​
 </style>
 
@@ -287,6 +288,10 @@
 <body>
 
 <script type="text/javascript">
+
+  var mainsail_btn_Window;
+  var fluidd_btn_Window;
+  
 <!-- add addition web links below -->
 $(document).ready(function(){
    WARN.style.display = 'none';
@@ -404,13 +409,13 @@ $(document).ready(function(){
 
 $(document).ready(function(){
    $("#mainssil-btn").click(function(){
-        window.open('http://192.168.1.154:7991', '_blank');
+        mainsail_btn_Window = window.open('http://192.168.1.154:7991', '_blank');
     });
 });
 
 $(document).ready(function(){
    $("#fluidd-btn").click(function(){
-        window.open('http://192.168.1.154:80', '_blank');
+        fluidd_btn_Window = window.open('http://192.168.1.154:80', '_blank');
     });
 });
 
@@ -517,7 +522,7 @@ PUBLISH: cmnd/WLED2_10Amp_PSU/Power
 */
 $(document).ready(function(){
    $("#printer_on").click(function(){
-   WARN.innerHTML='<h1> <span class="bold"> BOOTING the Printer, ensure the</span> <span class="red bold yellow-background"> BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">RELEASED!</span></h1>'
+   WARN.innerHTML='<h1> <span class="blck bold"> BOOTING the Printer</span><span class="bold">, ensure the</span> <span class="red bold yellow-background"> BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">RELEASED!</span></h1>'
    WARN.style.display = 'block';
    //wait 10 secounds;
     setTimeout(function() {
@@ -544,10 +549,10 @@ $(document).ready(function(){
     setTimeout(function() {
         MQTTconnect_RGB2_PSU();
     }, (6 * 1000));
-        ///wait 60 secounds;
+        ///wait 30 secounds;
     setTimeout(function() {
-        window.open('http://192.168.1.154:7991', '_blank');
-    }, (60 * 1000)); 
+        mainsail_btn_Window = window.open('http://192.168.1.154:7991', '_blank');
+    }, (30 * 1000)); 
     });
 });
 
@@ -582,17 +587,25 @@ PUBLISH: cmnd/Raspberry_Pi/Power
 
 $(document).ready(function(){
    $("#printer_off").click(function(){
-        WARN.innerHTML='<h1> <span class="red bold yellow-background">SHUTTDOWNING</span><span class="bold">, the Printer!</span> </h1>'
+        WARN.innerHTML='<h1> <span class="red bold yellow-background">SHUTTING DOWN</span><span class="blck bold">, the Printer!</span> </h1>'
         WARN.style.display = 'block';
         //wait 2 secounds;
         setTimeout(function() {
           WARN.style.display = 'none';
           MQTTconnect_SHUTDOWN();
+          if ((typeof mainsail_btn_Window !== "undefined") && (mainsail_btn_Window !== null))  
+          {
+             mainsail_btn_Window.close();
+          }
+          if ((typeof fluidd_btn_Window !== "undefined") && (fluidd_btn_Window !== null))  
+          {
+             fluidd_btn_Window.close(); 
+          }
         }, (2 * 1000));
         //wait 17 secounds;
         setTimeout(function() {
             MQTTconnect_Raspberry_Pi_PSU();
-            WARN.innerHTML='<h1> <span class="bold">After Printer has SHUTDOWN, ensure the </span><span class="red bold yellow-background">BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">PRESSED IN!</span> </h1>'
+            WARN.innerHTML='<h1> <span class="blck bold">After Printer has SHUTDOWN, ensure the </span><span class="red bold yellow-background">BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">PRESSED IN!</span> </h1>'
             WARN.style.display = 'block';
             //wait 10 secounds;
             setTimeout(function() {
