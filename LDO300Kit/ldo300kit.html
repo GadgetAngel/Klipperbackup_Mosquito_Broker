@@ -270,10 +270,14 @@
 
 <style>
   h1, h4 {text-align: center;}
+  h3 {text-align: center;}
   span {font-weight: bold;}
   table, th, td {
   border: 5px solid white;
-  border-collapse: collapse;
+  border-collapse: collapse;}
+  .bold { font-weight: bold; }
+  .red { color: #FF0000; }
+  .yellow-background { background-color: Yellow; }​
 </style>
 
 <!-- perform the following commands after you make changes to this file:  -->
@@ -283,11 +287,10 @@
 <body>
 
 <script type="text/javascript">
-
-
-
-// <![CDATA[
 <!-- add addition web links below -->
+$(document).ready(function(){
+   WARN.style.display = 'none';
+});
 $(document).ready(function(){
    $("#jschuh-btn").click(function(){
         window.open('https://github.com/jschuh/klipper-macros', '_blank');
@@ -514,27 +517,37 @@ PUBLISH: cmnd/WLED2_10Amp_PSU/Power
 */
 $(document).ready(function(){
    $("#printer_on").click(function(){
+   WARN.innerHTML='<h1> <span class="bold"> BOOTING the Printer, ensure the</span> <span class="red bold yellow-background"> BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">RELEASED!</span></h1>'
+   WARN.style.display = 'block';
+   //wait 10 secounds;
+    setTimeout(function() {
+      WARN.style.display = 'none';
+    }, (10 * 1000));
     MQTTconnect_Raspberry_Pi_PSU2();
     ///wait 2 secounds;
     setTimeout(function() {
         MQTTconnect_ESP1_PSU();
     }, (2 * 1000));
-    ///wait 2 secounds;
+    ///wait 3 secounds;
     setTimeout(function() {
         MQTTconnect_ESP2_PSU();
-    }, (2 * 1000));
-    ///wait 2 secounds;
+    }, (3 * 1000));
+    ///wait 4 secounds;
     setTimeout(function() {
         MQTTconnect_IR_PSU();
-    }, (2 * 1000));
-    ///wait 2 secounds;
+    }, (4 * 1000));
+    ///wait 5 secounds;
     setTimeout(function() {
         MQTTconnect_RGB_PSU();
-    }, (2 * 1000));
-    ///wait 2 secounds;
+    }, (5 * 1000));
+    ///wait 6 secounds;
     setTimeout(function() {
         MQTTconnect_RGB2_PSU();
-    }, (2 * 1000));
+    }, (6 * 1000));
+        ///wait 20 secounds;
+    setTimeout(function() {
+        window.open('http://192.168.1.154:7991', '_blank');
+    }, (20 * 1000)); 
     });
 });
 
@@ -569,11 +582,23 @@ PUBLISH: cmnd/Raspberry_Pi/Power
 
 $(document).ready(function(){
    $("#printer_off").click(function(){
-	    MQTTconnect_SHUTDOWN();
-        ///wait 30 secounds;
+        WARN.innerHTML='<h1> <span class="red bold yellow-background">SHUTTDOWNING</span><span class="bold">, the Printer!</span> </h1>'
+        WARN.style.display = 'block';
+        //wait 2 secounds;
         setTimeout(function() {
-        MQTTconnect_Raspberry_Pi_PSU();
-        }, (30 * 1000));
+          WARN.style.display = 'none';
+          MQTTconnect_SHUTDOWN();
+        }, (2 * 1000));
+        //wait 17 secounds;
+        setTimeout(function() {
+            MQTTconnect_Raspberry_Pi_PSU();
+            WARN.innerHTML='<h1> <span class="bold">After Printer has SHUTDOWN, ensure the </span><span class="red bold yellow-background">BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">PRESSED IN!</span> </h1>'
+            WARN.style.display = 'block';
+            //wait 10 secounds;
+            setTimeout(function() {
+               WARN.style.display = 'none';
+            }, (10 * 1000));
+        }, (17 * 1000));
     });
 });
 
@@ -608,8 +633,14 @@ $(document).ready(function(){
                        </tr>
                 </tbody>
         </table>
-      </form>
-      <br />   
+      </form> 
+    <br>      
+    </div>
+    <div data-role="content" align="center">
+      <div id="WARN" >
+          <div><h1> this text will be displaced </h1></div>
+       </div>
+       <br />
     </div>
     <br />
     <div data-role="header" data-theme="b">
