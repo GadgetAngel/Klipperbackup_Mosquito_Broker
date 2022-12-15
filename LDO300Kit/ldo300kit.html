@@ -4,9 +4,268 @@
 <head>
   <meta name="viewport" content="initial-scale=1, maximum-scale=1">
   <link rel="stylesheet" href="jquery.mobile-1.4.0.css" />
-   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+   <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>-->
+   <script src= "jquery.min.js" type="text/javascript" ></script>
   <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
   <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
+  <script src= "mqttws31.js" type="text/javascript" ></script>
+  
+  	 <script type = "text/javascript" language = "javascript">
+		var mqtt_SHUTDOWN;
+        var mqtt_Raspberry_Pi_PSU;  //Turn OFF Raspberry Pi PSU
+        var mqtt_BOOT;
+        var mqtt_Raspberry_Pi_PSU2; //Turn on Raspberry Pi PSU
+        var mqtt_ESP1_PSU;
+        var mqtt_ESP2_PSU;
+        var mqtt_IR_PSU;
+        var mqtt_RGB_PSU;
+        var mqtt_RGB2_PSU;
+        
+		var reconnectTimeout = 2000;
+		var host="192.168.1.172"; //change this
+		var port=9001;
+        
+	function onMessageArrived(msg) {
+        out_msg="Message received "+msg.payloadSring+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg.destinationName;
+		console.log(out_msg);
+	}
+      // Klipper SHUTDOWN macro!
+	 function onConnect_SHUTDOWN() {
+	    // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_SHUTDOWN.subscribe("printer/ldo300kit/moonraker/api/response");
+		message_SHUTDOWN = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "printer.gcode.script","params": {"script": "SHUTDOWN"},"id": 507466}');
+		message_SHUTDOWN.destinationName = "printer/ldo300kit/moonraker/api/request";
+		mqtt_SHUTDOWN.send(message_SHUTDOWN);
+	  }
+	 function onFailure_SHUTDOWN(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_SHUTDOWN, reconnectTimeout);
+	  }
+	 function MQTTconnect_SHUTDOWN() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_SHUTDOWN = new Paho.MQTT.Client(host,port,"SHUTDOWN");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_SHUTDOWN,
+			onFailure: onFailure_SHUTDOWN,
+		 };
+		mqtt_SHUTDOWN.onMessageArrived = onMessageArrived;
+		mqtt_SHUTDOWN.connect(options); //connect
+	} 
+     // Tasmota firmware - Turn OFF Raspberry_Pi_PSU
+	 function onConnect_Raspberry_Pi_PSU() {
+	  // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_Raspberry_Pi_PSU.subscribe("stat/Raspberry_Pi/Power");
+		message_Raspberry_Pi_PSU = new Paho.MQTT.Message("OFF");
+		message_Raspberry_Pi_PSU.destinationName = "cmnd/Raspberry_Pi/Power";
+		mqtt_Raspberry_Pi_PSU.send(message_Raspberry_Pi_PSU);
+	  }
+	 function onFailure_Raspberry_Pi_PSU(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_Raspberry_Pi_PSU, reconnectTimeout);
+	  }
+	  function MQTTconnect_Raspberry_Pi_PSU() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_Raspberry_Pi_PSU = new Paho.MQTT.Client(host,port,"SHUTDOWN_Pi_PSU");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_Raspberry_Pi_PSU,
+            onFailure: onFailure_Raspberry_Pi_PSU,
+		 };
+		mqtt_Raspberry_Pi_PSU.onMessageArrived = onMessageArrived;
+		mqtt_Raspberry_Pi_PSU.connect(options); //connect
+		}
+        
+     // Klipper BOOT macro!
+	 function onConnect_BOOT() {
+	    // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_BOOT.subscribe("printer/ldo300kit/moonraker/api/response");
+		message_BOOT = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "printer.gcode.script","params": {"script": "BOOT"},"id": 607466}');
+		message_BOOT.destinationName = "printer/ldo300kit/moonraker/api/request";
+		mqtt_BOOT.send(message_BOOT);
+	  }
+	 function onFailure_BOOT(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_BOOT, reconnectTimeout);
+	  }
+	 function MQTTconnect_BOOT() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_BOOT = new Paho.MQTT.Client(host,port,"BOOT");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_BOOT,
+			onFailure: onFailure_BOOT,
+		 };
+		mqtt_BOOT.onMessageArrived = onMessageArrived;
+		mqtt_BOOT.connect(options); //connect
+	}
+     // Tasmota firmware - Turn ON Raspberry_Pi_PSU
+	 function onConnect_Raspberry_Pi_PSU2() {
+	  // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_Raspberry_Pi_PSU2.subscribe("stat/Raspberry_Pi/Power");
+		message_Raspberry_Pi_PSU2 = new Paho.MQTT.Message("ON");
+		message_Raspberry_Pi_PSU2.destinationName = "cmnd/Raspberry_Pi/Power";
+		mqtt_Raspberry_Pi_PSU2.send(message_Raspberry_Pi_PSU2);
+	  }
+	 function onFailure_Raspberry_Pi_PSU2(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_Raspberry_Pi_PSU2, reconnectTimeout);
+	  }
+	  function MQTTconnect_Raspberry_Pi_PSU2() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_Raspberry_Pi_PSU2 = new Paho.MQTT.Client(host,port,"BOOT_Pi_PSU");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_Raspberry_Pi_PSU2,
+            onFailure: onFailure_Raspberry_Pi_PSU2,
+		 };
+		mqtt_Raspberry_Pi_PSU2.onMessageArrived = onMessageArrived;
+		mqtt_Raspberry_Pi_PSU2.connect(options); //connect
+		}
+        
+        
+     // Tasmota firmware - Turn ON ESP1_PSU
+	 function onConnect_ESP1_PSU() {
+	  // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_ESP1_PSU.subscribe("stat/ESP1_PSU/Power");
+		message_ESP1_PSU = new Paho.MQTT.Message("ON");
+		message_ESP1_PSU.destinationName = "cmnd/ESP1_PSU/Power";
+		mqtt_ESP1_PSU.send(message_ESP1_PSU);
+	  }
+	 function onFailure_ESP1_PSU(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_ESP1_PSU, reconnectTimeout);
+	  }
+	  function MQTTconnect_ESP1_PSU() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_ESP1_PSU = new Paho.MQTT.Client(host,port,"BOOT_ESP1_PSU");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_ESP1_PSU,
+            onFailure: onFailure_ESP1_PSU,
+		 };
+		mqtt_ESP1_PSU.onMessageArrived = onMessageArrived;
+		mqtt_ESP1_PSU.connect(options); //connect
+		}
+          
+     // Tasmota firmware - Turn ON _ESP2_PSU
+	 function onConnect_ESP2_PSU() {
+	  // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_ESP2_PSU.subscribe("stat/ESP2_PSU/Power");
+		message_ESP2_PSU = new Paho.MQTT.Message("ON");
+		message_ESP2_PSU.destinationName = "cmnd/ESP2_PSU/Power";
+		mqtt_ESP2_PSU.send(message_ESP2_PSU);
+	  }
+	 function onFailure_ESP2_PSU(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_ESP2_PSU, reconnectTimeout);
+	  }
+	  function MQTTconnect_ESP2_PSU() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_ESP2_PSU = new Paho.MQTT.Client(host,port,"BOOT_ESP2_PSU");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_ESP2_PSU,
+            onFailure: onFailure_ESP2_PSU,
+		 };
+		mqtt_ESP2_PSU.onMessageArrived = onMessageArrived;
+		mqtt_ESP2_PSU.connect(options); //connect
+		} 
+
+     // Tasmota firmware - Turn ON _IR_PSU
+	 function onConnect_IR_PSU() {
+	  // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_IR_PSU.subscribe("stat/IR_PSU/Power");
+		message_IR_PSU = new Paho.MQTT.Message("ON");
+		message_IR_PSU.destinationName = "cmnd/IR_PSU/Power";
+		mqtt_IR_PSU.send(message_IR_PSU);
+	  }
+	 function onFailure_IR_PSU(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_IR_PSU, reconnectTimeout);
+	  }
+	  function MQTTconnect_IR_PSU() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_IR_PSU = new Paho.MQTT.Client(host,port,"BOOT_IR_PSU");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_IR_PSU,
+            onFailure: onFailure_IR_PSU,
+		 };
+		mqtt_IR_PSU.onMessageArrived = onMessageArrived;
+		mqtt_IR_PSU.connect(options); //connect
+		} 
+
+     // Tasmota firmware - Turn ON _RGB_PSU
+	 function onConnect_RGB_PSU() {
+	  // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_RGB_PSU.subscribe("stat/WLED1_15Amp_PSU/Power");
+		message_RGB_PSU = new Paho.MQTT.Message("ON");
+		message_RGB_PSU.destinationName = "cmnd/WLED1_15Amp_PSU/Power";
+		mqtt_RGB_PSU.send(message_RGB_PSU);
+	  }
+	 function onFailure_RGB_PSU(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_RGB_PSU, reconnectTimeout);
+	  }
+	  function MQTTconnect_RGB_PSU() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_RGB_PSU = new Paho.MQTT.Client(host,port,"BOOT_RGB_PSU");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_RGB_PSU,
+            onFailure: onFailure_RGB_PSU,
+		 };
+		mqtt_RGB_PSU.onMessageArrived = onMessageArrived;
+		mqtt_RGB_PSU.connect(options); //connect
+		} 
+
+     // Tasmota firmware - Turn ON _RGB2
+	 function onConnect_RGB2_PSU() {
+	  // Once a connection has been made, make a subscription and send a message.
+		console.log("Connected ");
+		mqtt_RGB2_PSU.subscribe("stat/WLED2_10Amp_PSU/Power");
+		message_RGB2_PSU = new Paho.MQTT.Message("ON");
+		message_RGB2_PSU.destinationName = "cmnd/WLED2_10Amp_PSU/Power";
+		mqtt_RGB2_PSU.send(message_RGB2_PSU);
+	  }
+	 function onFailure_RGB2_PSU(messag) {
+		console.log("Connected Attempt to Host "+host+" Failed");
+        setTimeout(MQTTconnect_RGB2_PSU, reconnectTimeout);
+	  }
+	  function MQTTconnect_RGB2_PSU() {
+		console.log("connecting to "+ host +" "+ port);
+		mqtt_RGB2_PSU = new Paho.MQTT.Client(host,port,"BOOT_RGB2_PSU");
+		var options = {
+			//useSSL:true,
+			timeout: 3,
+			onSuccess: onConnect_RGB2_PSU,
+            onFailure: onFailure_RGB2_PSU,
+		 };
+		mqtt_RGB2_PSU.onMessageArrived = onMessageArrived;
+		mqtt_RGB2_PSU.connect(options); //connect
+		} 	 
+     
+     
+	  </script>
+  
 </head>
 
 <style>
@@ -22,7 +281,12 @@
 <!-- ./git_backup.sh -->
 
 <body>
-<script type="text/javascript">// <![CDATA[
+
+<script type="text/javascript">
+
+
+
+// <![CDATA[
 <!-- add addition web links below -->
 $(document).ready(function(){
    $("#jschuh-btn").click(function(){
@@ -153,13 +417,8 @@ $(document).ready(function(){
     });
 });
 
-$(document).ready(function(){
-   $("#control-btn").click(function(){
-        window.open('http://192.168.1.154:7990/resetrp2040.html', '_blank');
-    });
-});
+/*-- add addition php files below --*/
 
-<!-- add addition php files below -->
 $(document).ready(function() {
 	$('#on').click(function(){  
 		var a = new XMLHttpRequest();
@@ -203,6 +462,120 @@ $(document).ready(function(){
 	});
 });
 
+/* MQTT Commands to shut down the printer and boot up the printer using MQTT over websockets */
+
+/* Script to Turn printer ON: */
+/*
+The file printer-BOOT.htm uses MQTT Over WebSockets with Mosquitto (Javascript)
+Resources: https://www.eclipse.org/paho/files/jsdoc/Paho.MQTT.Client.html
+           http://www.steves-internet-guide.com/mqtt-websockets/
+           
+requirements:
+needs mosquitto installed on the raspberry pi
+need to install paho-mqtt via "pip3 install paho-mqtt"
+need to include [mqtt] section in moonraker and enable cors_domains: in moonraker
+
+# power on the PSU for the raspberry pi, this allows klipper to boot up
+Use MQTT over websockets to turn on the raspberry PI PSU
+# turn on the Stealthburner LEDs and WLED and White Case lights
+#RESETRGB_ONSTARTUP_0.8.cfg -> RESETRGB - runs automatically
+#PRERUN_1.cfg - runs automatically
+
+#turn on Raspberry_Pi_PSU via MQTT to tasmota firmware (POWER_ON_Pi_PSU)
+SUBSCRIBE: stat/Raspberry_Pi/Power
+PUBLISH: cmnd/Raspberry_Pi/Power 
+    ON
+
+#_POWER_ON_ESP_PSU
+SUBSCRIBE: stat/ESP1_PSU/Power
+PUBLISH: cmnd/ESP1_PSU/Power
+    ON
+    
+# _POWER_ON_ESP2
+SUBSCRIBE: stat/ESP2_PSU/Power
+PUBLISH: cmnd/ESP2_PSU/Power 
+    ON
+
+_POWER_ON_IR_PSU
+SUBSCRIBE: stat/IR_PSU/Power
+PUBLISH: cmnd/IR_PSU/Power 
+    ON
+    
+_POWER_ON_RGB_PSU
+SUBSCRIBE: stat/WLED1_15Amp_PSU/Power
+PUBLISH: cmnd/WLED1_15Amp_PSU/Power 
+    ON
+    
+_POWER_ON_RGB2  
+SUBSCRIBE: stat/WLED2_10Amp_PSU/Power
+PUBLISH: cmnd/WLED2_10Amp_PSU/Power 
+    ON
+
+*/
+$(document).ready(function(){
+   $("#printer_on").click(function(){
+    MQTTconnect_Raspberry_Pi_PSU2();
+    ///wait 2 secounds;
+    setTimeout(function() {
+        MQTTconnect_ESP1_PSU();
+    }, (2 * 1000));
+    ///wait 2 secounds;
+    setTimeout(function() {
+        MQTTconnect_ESP2_PSU();
+    }, (2 * 1000));
+    ///wait 2 secounds;
+    setTimeout(function() {
+        MQTTconnect_IR_PSU();
+    }, (2 * 1000));
+    ///wait 2 secounds;
+    setTimeout(function() {
+        MQTTconnect_RGB_PSU();
+    }, (2 * 1000));
+    ///wait 2 secounds;
+    setTimeout(function() {
+        MQTTconnect_RGB2_PSU();
+    }, (2 * 1000));
+    });
+});
+
+/* Script to Turn printer OFF:
+The file printer-SHUTDOWN.htm uses MQTT Over WebSockets with Mosquitto  (Javascript)
+Resources: https://www.eclipse.org/paho/files/jsdoc/Paho.MQTT.Client.html
+           http://www.steves-internet-guide.com/mqtt-websockets/
+           
+requirements:
+needs mosquitto installed on the raspberry pi
+need to install paho-mqtt via "pip3 install paho-mqtt"
+need to include [mqtt] section in moonraker and enable cors_domains: in moonraker
+
+#execute Klipper SHUTDOWN macro via MQTT!
+SUBSCRIBE: printer/ldo300kit/moonraker/api/response
+PUBLSIH: printer/ldo300kit/moonraker/api/request
+{
+    "jsonrpc": "2.0",
+    "method": "printer.gcode.script",
+    "params": {
+        "script": "SHUTDOWN"
+    },
+    "id": 507466}
+    
+{"jsonrpc": "2.0","method": "printer.gcode.script","params": {"script": "SHUTDOWN"},"id": 507466}
+    
+#turn off Raspberry_Pi_PSU via MQTT to tasmota firmware
+SUBSCRIBE: stat/Raspberry_Pi/Power
+PUBLISH: cmnd/Raspberry_Pi/Power 
+    OFF
+*/
+
+$(document).ready(function(){
+   $("#printer_off").click(function(){
+	    MQTTconnect_SHUTDOWN();
+        ///wait 30 secounds;
+        setTimeout(function() {
+        MQTTconnect_Raspberry_Pi_PSU();
+        }, (30 * 1000));
+    });
+});
 
 </script>
 
@@ -217,6 +590,27 @@ $(document).ready(function(){
     <div data-role="content" align="center">
       <iframe id="frame1" src="http://192.168.1.148/" width=75% height=250></iframe>
     </div> -->
+    <div data-role="header" data-theme="b">
+      <div><h2>&nbsp;&nbsp;BOOT up or SHUTDOWN the LDO 300 kit's Klipper server (Raspberry Pi):</h2></div>
+    </div>
+    <div data-role="content" align="center">
+      <br />
+      <br />
+      <form>
+      <!-- This table contains the command buttons -->
+        <table width="75%" style="background-color:#87adde">
+                <tbody>
+                       <tr>
+                               <td><a href="#" data-role="button" data-icon="gear" id="printer_on"> TURN ON LDO 300 Kit Printer </a></td>
+                       </tr>
+                       <tr>
+                               <td><a href="#" data-role="button" data-icon="gear" id="printer_off"> Gracefully SHUTDOWN LDO 300 Kit Printer </a></td>
+                       </tr>
+                </tbody>
+        </table>
+      </form>
+      <br />   
+    </div>
     <br />
     <div data-role="header" data-theme="b">
       <div><h2>&nbsp;&nbsp;Sonoff S31 - Raspberry Pi (sonoff_9):</h2></div>
@@ -224,8 +618,6 @@ $(document).ready(function(){
     <div data-role="content" align="center">
       <iframe id="frame1" src="http://192.168.1.168" width=75% height=525></iframe>
     </div>
-    <br />
-    <br />
     <br />
     <div data-role="header" data-theme="b">
       <div><h2>&nbsp;&nbsp;GO TO Different Web Pages:</h2></div>
@@ -248,9 +640,6 @@ $(document).ready(function(){
                        </tr>
                        <tr>
                                <td><a href="#" data-role="button" data-icon="gear" id="moontest-btn"> Moonraker POST example on Printer's Pi UI </a></td>
-                       </tr>
-                       <tr>
-                               <td><a href="#" data-role="button" data-icon="gear" id="control-btn"> Go to LDO 300 kit Control Page on Printer's Pi </a></td>
                        </tr>
                 </tbody>
         </table>
