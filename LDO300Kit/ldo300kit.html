@@ -10,7 +10,42 @@
   <script src="http://code.jquery.com/mobile/1.4.0/jquery.mobile-1.4.0.min.js"></script>
   <script src= "mqttws31.js" type="text/javascript" ></script>
   
+<script>
+
+    // Function to read the JSON from a file - returns a promise containing the parsed JSON
+    async function readJSONFile(file) {
+        // Function will return a new Promise which will resolve or reject based on whether the JSON file is read and parsed successfully
+        return new Promise((resolve, reject) => {
+            // Define a FileReader Object to read the file
+            let fileReader = new FileReader();
+            // Specify what the FileReader should do on the successful read of a file
+            fileReader.onload = event => {
+                // If successfully read, resolve the Promise with JSON parsed contents of the file
+                resolve(JSON.parse(event.target.result))
+            };
+            // If the file is not successfully read, reject with the error
+            fileReader.onerror = error => reject(error);
+            // Read from the file, which will kick-off the onload or onerror events defined above based on the outcome
+            fileReader.readAsText(file);
+        });
+    }
+    
+// Function to be triggered when file input changes
+    async function fileChange(file){
+        // As readJSONFile is a promise, it must resolve before the contents can be read - in this case logged to the console
+        readJSONFile(file).then(json => console.log(json));
+    }
+    
+</script>
+    
+<!-- File input.  When changed, file inputs produce a FileList object (this.files) - the first item within being the first selected file. -->
+<input type="file" onchange="fileChange(this.files[0])" />
+
+</script>
+    
+
   	 <script type = "text/javascript" language = "javascript">
+        
 		var mqtt_SHUTDOWN;
         var mqtt_Raspberry_Pi_PSU;  //Turn OFF Raspberry Pi PSU
         var mqtt_BOOT;
@@ -21,10 +56,28 @@
         var mqtt_RGB_PSU;
         var mqtt_RGB2_PSU;
         
+        const myInit = {
+             method: 'GET',
+             headers: {
+               'Content-Type': 'application/json',
+             },
+             mode: 'cors',
+             cache: 'no-cache',
+             credentials: 'same-origin'
+             };
+        var data;
+        var url1 = 'http://192.168.1.172:86/user1.JSON';
+        var url2 = 'http://192.168.1.172:86/user2.JSON';
+        var url3 = 'http://192.168.1.172:86/user3.JSON';
+        var url4 = 'http://192.168.1.172:86/user4.JSON';
+        var url5 = 'http://192.168.1.172:86/user5.JSON';
+        var url6 = 'http://192.168.1.172:86/user6.JSON';
+        var url7 = 'http://192.168.1.172:86/user7.JSON';
+        
 		var reconnectTimeout = 2000;
 		var host="192.168.1.172"; //change this
 		var port=9001;
-        
+            
 	function onMessageArrived(msg) {
         out_msg="Message received "+msg.payloadSring+"<br>";
         out_msg=out_msg+"Message received Topic "+msg.destinationName;
@@ -46,14 +99,24 @@
 	 function MQTTconnect_SHUTDOWN() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_SHUTDOWN = new Paho.MQTT.Client(host,port,"SHUTDOWN");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_SHUTDOWN,
-			onFailure: onFailure_SHUTDOWN,
-		 };
-		mqtt_SHUTDOWN.onMessageArrived = onMessageArrived;
-		mqtt_SHUTDOWN.connect(options); //connect
+        fetch(url1, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_SHUTDOWN,
+                onFailure: onFailure_SHUTDOWN,
+		        };
+		       mqtt_SHUTDOWN.onMessageArrived = onMessageArrived;
+		       mqtt_SHUTDOWN.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });      
 	} 
      // Tasmota firmware - Turn OFF Raspberry_Pi_PSU
 	 function onConnect_Raspberry_Pi_PSU() {
@@ -71,14 +134,24 @@
 	  function MQTTconnect_Raspberry_Pi_PSU() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_Raspberry_Pi_PSU = new Paho.MQTT.Client(host,port,"SHUTDOWN_Pi_PSU");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_Raspberry_Pi_PSU,
-            onFailure: onFailure_Raspberry_Pi_PSU,
-		 };
-		mqtt_Raspberry_Pi_PSU.onMessageArrived = onMessageArrived;
-		mqtt_Raspberry_Pi_PSU.connect(options); //connect
+        fetch(url2, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_Raspberry_Pi_PSU,
+                onFailure: onFailure_Raspberry_Pi_PSU,
+		        };
+		       mqtt_Raspberry_Pi_PSU.onMessageArrived = onMessageArrived;
+		       mqtt_Raspberry_Pi_PSU.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });
 		}
         
      // Klipper BOOT macro!
@@ -97,14 +170,24 @@
 	 function MQTTconnect_BOOT() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_BOOT = new Paho.MQTT.Client(host,port,"BOOT");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_BOOT,
-			onFailure: onFailure_BOOT,
-		 };
-		mqtt_BOOT.onMessageArrived = onMessageArrived;
-		mqtt_BOOT.connect(options); //connect
+        fetch(url1, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_BOOT,
+                onFailure: onFailure_BOOT,
+		        };
+		       mqtt_BOOT.onMessageArrived = onMessageArrived;
+		       mqtt_BOOT.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });      
 	}
      // Tasmota firmware - Turn ON Raspberry_Pi_PSU
 	 function onConnect_Raspberry_Pi_PSU2() {
@@ -122,14 +205,24 @@
 	  function MQTTconnect_Raspberry_Pi_PSU2() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_Raspberry_Pi_PSU2 = new Paho.MQTT.Client(host,port,"BOOT_Pi_PSU");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_Raspberry_Pi_PSU2,
-            onFailure: onFailure_Raspberry_Pi_PSU2,
-		 };
-		mqtt_Raspberry_Pi_PSU2.onMessageArrived = onMessageArrived;
-		mqtt_Raspberry_Pi_PSU2.connect(options); //connect
+        fetch(url2, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_Raspberry_Pi_PSU2,
+                onFailure: onFailure_Raspberry_Pi_PSU2,
+		        };
+		       mqtt_Raspberry_Pi_PSU2.onMessageArrived = onMessageArrived;
+		       mqtt_Raspberry_Pi_PSU2.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });
 		}
         
         
@@ -149,14 +242,24 @@
 	  function MQTTconnect_ESP1_PSU() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_ESP1_PSU = new Paho.MQTT.Client(host,port,"BOOT_ESP1_PSU");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_ESP1_PSU,
-            onFailure: onFailure_ESP1_PSU,
-		 };
-		mqtt_ESP1_PSU.onMessageArrived = onMessageArrived;
-		mqtt_ESP1_PSU.connect(options); //connect
+        fetch(url3, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_ESP1_PSU,
+                onFailure: onFailure_ESP1_PSU,
+		        };
+		       mqtt_ESP1_PSU.onMessageArrived = onMessageArrived;
+		       mqtt_ESP1_PSU.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });
 		}
           
      // Tasmota firmware - Turn ON _ESP2_PSU
@@ -175,14 +278,24 @@
 	  function MQTTconnect_ESP2_PSU() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_ESP2_PSU = new Paho.MQTT.Client(host,port,"BOOT_ESP2_PSU");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_ESP2_PSU,
-            onFailure: onFailure_ESP2_PSU,
-		 };
-		mqtt_ESP2_PSU.onMessageArrived = onMessageArrived;
-		mqtt_ESP2_PSU.connect(options); //connect
+        fetch(url4, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_ESP2_PSU,
+                onFailure: onFailure_ESP2_PSU,
+		        };
+		       mqtt_ESP2_PSU.onMessageArrived = onMessageArrived;
+		       mqtt_ESP2_PSU.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });      
 		} 
 
      // Tasmota firmware - Turn ON _IR_PSU
@@ -201,14 +314,24 @@
 	  function MQTTconnect_IR_PSU() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_IR_PSU = new Paho.MQTT.Client(host,port,"BOOT_IR_PSU");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_IR_PSU,
-            onFailure: onFailure_IR_PSU,
-		 };
-		mqtt_IR_PSU.onMessageArrived = onMessageArrived;
-		mqtt_IR_PSU.connect(options); //connect
+        fetch(url5, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_IR_PSU,
+                onFailure: onFailure_IR_PSU,
+		        };
+		       mqtt_IR_PSU.onMessageArrived = onMessageArrived;
+		       mqtt_IR_PSU.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });           
 		} 
 
      // Tasmota firmware - Turn ON _RGB_PSU
@@ -227,14 +350,24 @@
 	  function MQTTconnect_RGB_PSU() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_RGB_PSU = new Paho.MQTT.Client(host,port,"BOOT_RGB_PSU");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_RGB_PSU,
-            onFailure: onFailure_RGB_PSU,
-		 };
-		mqtt_RGB_PSU.onMessageArrived = onMessageArrived;
-		mqtt_RGB_PSU.connect(options); //connect
+        fetch(url6, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_RGB_PSU,
+                onFailure: onFailure_RGB_PSU,
+		        };
+		       mqtt_RGB_PSU.onMessageArrived = onMessageArrived;
+		       mqtt_RGB_PSU.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });   
 		} 
 
      // Tasmota firmware - Turn ON _RGB2
@@ -253,19 +386,29 @@
 	  function MQTTconnect_RGB2_PSU() {
 		console.log("connecting to "+ host +" "+ port);
 		mqtt_RGB2_PSU = new Paho.MQTT.Client(host,port,"BOOT_RGB2_PSU");
-		var options = {
-			//useSSL:true,
-			timeout: 3,
-			onSuccess: onConnect_RGB2_PSU,
-            onFailure: onFailure_RGB2_PSU,
-		 };
-		mqtt_RGB2_PSU.onMessageArrived = onMessageArrived;
-		mqtt_RGB2_PSU.connect(options); //connect
+        fetch(url7, myInit)
+           .then(response => response.json())
+           .then(json => {
+		        var options = {
+			    //useSSL:true,
+			    timeout: 3,
+                userName: json.user_name,
+                password: json.password,
+			    onSuccess: onConnect_RGB2_PSU,
+                onFailure: onFailure_RGB2_PSU,
+		        };
+		       mqtt_RGB2_PSU.onMessageArrived = onMessageArrived;
+		       mqtt_RGB2_PSU.connect(options); //connect
+
+          })
+          .catch((error) => {
+              console.error('Error:', error);
+          });        
 		} 	 
      
      
 	  </script>
-  
+    
 </head>
 
 <style>
