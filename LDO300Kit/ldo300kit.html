@@ -19,6 +19,18 @@
      var mqtt_IR_PSU;
      var mqtt_RGB_PSU;
      var mqtt_RGB2_PSU;
+     var mqtt_MACHINE_SHUTDOWN;
+     var mqtt_KLIPPER_SERVICE_STOP;
+     var mqtt_FIRMWARE_RESTART;
+     var mqtt_GET_KLIPPY_STATE;
+     var out_msg_GET_KLIPPY_STATE;
+     var payload_Raspberry_Pi_PSU;
+     var payload_ESP1_PSU;
+     var payload_ESP2_PSU;
+     var payload_IR_PSU;
+     var payload_RGB_PSU;
+     var payload_RGB2_PSU;
+     var flag = 0;
         
      const myInit = {
         method: 'GET',
@@ -41,24 +53,262 @@
      var reconnectTimeout = 2000;
      var host="192.168.1.172"; //change this
      var port=9001;
-            
-     function onMessageArrived(msg) {
-        out_msg="Message received "+msg.payloadSring+"<br>";
-        out_msg=out_msg+"Message received Topic "+msg.destinationName;
-        console.log(out_msg);
-    }
     
+    // Get State of Klippy
+    // GET /printer/info or printer.info: {"jsonrpc": "2.0","method": "printer.info","id": 5445} 
+    //   returns: {"state": "ready","state_message": "Printer is ready","hostname": "my-pi-hostname","software_version": "v0.9.1-302-g900c7396","cpu_info": "4 ...}"core ARMv7 Processor rev 4 (v7l)",
+    //The "state" item can be one of the following:
+    //"startup" - Klippy is in the process of starting up
+    //"ready" - Klippy is ready
+    //"shutdown" - Klippy has shutdown
+    //"error" - Klippy has experienced an error during startup
+    function onMessageArrived_GET_KLIPPY_STATE(msg3) {
+      if (typeof msg3.payloadString === 'undefined' || msg3.payloadString === null) {
+         //check one more time, wait 15 seconds
+         console.log("Klippy_state == UNDEFINE!");
+         mqtt_GET_KLIPPY_STATE.disconnect();
+         flag = flag + 1;
+         console.log("flag = "+flag);
+      } else {
+        const GET_KLIPPY_STATE_obj = JSON.parse(msg3.payloadString)
+        out_msg_GET_KLIPPY_STATE = GET_KLIPPY_STATE_obj.state
+        console.log("Klippy_state = "+out_msg_GET_KLIPPY_STATE);
+        if (GET_KLIPPY_STATE_obj.klippy_state != 'ready') {
+            flag = flag + 1;
+            console.log("Klippy state received but it is NOT READY!");
+            console.log("flag = "+flag);
+            WARN.innerHTML='<h1> <span class="red bold yellow-background">PRINTER NOT YET READY!</span><span class="blck bold"> Performing a </span><span class="red bold yellow-background">FIRMWARE_RESTART</span><span class="blck bold"> command</span></h1>'
+            WARN.style.display = 'block';
+            //wait 5 secounds;
+            setTimeout(function() {
+               WARN.style.display = 'none';
+             }, (5 * 1000));
+            // if after a minute the klippy state is not 'ready' perform a FIRMWARE_RESTART
+            MQTTconnect_FIRMWARE_RESTART();
+            out_msg="Message received "+msg3.payloadString+"<br>";
+            out_msg=out_msg+"Message received Topic "+msg3.destinationName;
+            console.log(out_msg);
+            mqtt_GET_KLIPPY_STATE.disconnect();
+        } else {
+            flag = 0;
+            out_msg="Message received "+msg3.payloadString+"<br>";
+            out_msg=out_msg+"Message received Topic "+msg3.destinationName;
+            console.log(out_msg);
+            mqtt_GET_KLIPPY_STATE.disconnect();
+        }
+      }
+    }
+    function onConnectionLost_GET_KLIPPY_STATE(responseObject1) {
+       if (responseObject1.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject1.errorMessage);
+    }
+    function onConnect_GET_KLIPPY_STATE() {
+       // Once a connection has been made, make a subscription and send a message.
+       console.log("Connected ");
+       mqtt_GET_KLIPPY_STATE.subscribe("printer/ldo300kit/moonraker/api/response");
+       message_GET_KLIPPY_STATE = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "printer.info","id": 5445}');
+       message_GET_KLIPPY_STATE.destinationName = "printer/ldo300kit/moonraker/api/request";
+       message_GET_KLIPPY_STATE.qos = 0;
+       message_GET_KLIPPY_STATE.retained = false;
+       mqtt_GET_KLIPPY_STATE.send(message_GET_KLIPPY_STATE);
+    }
+    function onFailure_GET_KLIPPY_STATE(mess1) {
+       console.log("Connected Attempt to Host "+host+" Failed");
+       setTimeout(MQTTconnect_GET_KLIPPY_STATE(), reconnectTimeout);
+    }
+    function MQTTconnect_GET_KLIPPY_STATE() {
+       console.log("connecting to "+ host +" "+ port);
+       mqtt_GET_KLIPPY_STATE = new Paho.MQTT.Client(host,port,"GET_KLIPPY_STATE");
+       fetch(url1, myInit)
+           .then(response => response.json())
+           .then(json => {
+                var options1 = {
+                    //useSSL:true,
+                    timeout: 3,
+                    userName: json.user_name,
+                    password: json.password,
+                    onSuccess: onConnect_GET_KLIPPY_STATE,
+                    onFailure: onFailure_GET_KLIPPY_STATE
+                };
+                mqtt_GET_KLIPPY_STATE.onMessageArrived = onMessageArrived_GET_KLIPPY_STATE;
+                mqtt_GET_KLIPPY_STATE.onConnectionLost = onConnectionLost_GET_KLIPPY_STATE;
+                mqtt_GET_KLIPPY_STATE.connect(options1); //connect
+            })
+            .catch((error1) => {
+                console.error('Error:', error1);
+            });          
+    }         
+    // Firmware Restart
+    function onMessageArrived_FIRMWARE_RESTART(msg4) {
+        out_msg="Message received "+msg4.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg4.destinationName;
+        console.log(out_msg);
+        WARN.innerHTML='<h1> <span class="blck bold">Printer is now UP and Ready to use! </span></h1>'
+        WARN.style.display = 'block';
+        //wait 10 secounds;
+        setTimeout(function() {
+            WARN.style.display = 'none';
+        }, (10 * 1000));
+        mqtt_FIRMWARE_RESTART.disconnect();
+    }
+    function onConnectionLost_FIRMWARE_RESTART(responseObject2) {
+       if (responseObject2.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject2.errorMessage);
+    }
+    function onConnect_FIRMWARE_RESTART() {
+       // Once a connection has been made, make a subscription and send a message.
+       console.log("Connected ");
+       mqtt_FIRMWARE_RESTART.subscribe("printer/ldo300kit/moonraker/api/response");
+       message_FIRMWARE_RESTART = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "printer.firmware_restart","id": 8463}');
+       message_FIRMWARE_RESTART.destinationName = "printer/ldo300kit/moonraker/api/request";
+       message_FIRMWARE_RESTART.qos = 0;
+       message_FIRMWARE_RESTART.retained = false;
+       mqtt_FIRMWARE_RESTART.send(message_FIRMWARE_RESTART);
+    }
+    function onFailure_FIRMWARE_RESTART(mess2) {
+       console.log("Connected Attempt to Host "+host+" Failed");
+       setTimeout(MQTTconnect_FIRMWARE_RESTART(), reconnectTimeout);
+    }
+    function MQTTconnect_FIRMWARE_RESTART() {
+       console.log("connecting to "+ host +" "+ port);
+       mqtt_FIRMWARE_RESTART = new Paho.MQTT.Client(host,port,"FIRMWARE_RESTART");
+       fetch(url1, myInit)
+           .then(response => response.json())
+           .then(json => {
+                var options2 = {
+                    //useSSL:true,
+                    timeout: 3,
+                    userName: json.user_name,
+                    password: json.password,
+                    onSuccess: onConnect_FIRMWARE_RESTART,
+                    onFailure: onFailure_FIRMWARE_RESTART
+                };
+                mqtt_FIRMWARE_RESTART.onMessageArrived = onMessageArrived_FIRMWARE_RESTART;
+                mqtt_FIRMWARE_RESTART.onConnectionLost = onConnectionLost_FIRMWARE_RESTART;
+                mqtt_FIRMWARE_RESTART.connect(options2); //connect
+            })
+            .catch((error2) => {
+                console.error('Error:', error2);
+            });      
+    }     
+    // Klipper service stopped!
+    function onMessageArrived_KLIPPER_SERVICE_STOP(msg6) {
+        out_msg="Message received "+msg6.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg6.destinationName;
+        console.log(out_msg);
+        mqtt_KLIPPER_SERVICE_STOP.disconnect();
+    }  
+    function onConnectionLost_KLIPPER_SERVICE_STOP(responseObject3) {
+       if (responseObject3.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject3.errorMessage);
+    }
+    function onConnect_KLIPPER_SERVICE_STOP() {
+       // Once a connection has been made, make a subscription and send a message.
+       console.log("Connected ");
+       mqtt_KLIPPER_SERVICE_STOP.subscribe("printer/ldo300kit/moonraker/api/response");
+       message_KLIPPER_SERVICE_STOP = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "machine.services.stop","params": {"service": "klipper"},"id": 4656}');
+       message_KLIPPER_SERVICE_STOP.destinationName = "printer/ldo300kit/moonraker/api/request";
+       message_KLIPPER_SERVICE_STOP.qos = 0;
+       message_KLIPPER_SERVICE_STOP.retained = false;
+       mqtt_KLIPPER_SERVICE_STOP.send(message_KLIPPER_SERVICE_STOP);
+    }
+    function onFailure_KLIPPER_SERVICE_STOP(mess3) {
+       console.log("Connected Attempt to Host "+host+" Failed");
+       setTimeout(MQTTconnect_KLIPPER_SERVICE_STOP(), reconnectTimeout);
+    }
+    function MQTTconnect_KLIPPER_SERVICE_STOP() {
+       console.log("connecting to "+ host +" "+ port);
+       mqtt_KLIPPER_SERVICE_STOP = new Paho.MQTT.Client(host,port,"KLIPPER_SERVICE_STOP");
+       fetch(url1, myInit)
+           .then(response => response.json())
+           .then(json => {
+                var options3 = {
+                    //useSSL:true,
+                    timeout: 3,
+                    userName: json.user_name,
+                    password: json.password,
+                    onSuccess: onConnect_KLIPPER_SERVICE_STOP,
+                    onFailure: onFailure_KLIPPER_SERVICE_STOP
+                };
+                mqtt_KLIPPER_SERVICE_STOP.onMessageArrived = onMessageArrived_KLIPPER_SERVICE_STOP;
+                mqtt_KLIPPER_SERVICE_STOP.onConnectionLost = onConnectionLost_KLIPPER_SERVICE_STOP;
+                mqtt_KLIPPER_SERVICE_STOP.connect(options3); //connect
+            })
+            .catch((error3) => {
+                console.error('Error:', error3);
+            });      
+    }     
+    // Printer machine.shutdown!
+    function onMessageArrived_MACHINE_SHUTDOWN(msg7) {
+        out_msg="Message received "+msg7.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg7.destinationName;
+        console.log(out_msg);
+        mqtt_MACHINE_SHUTDOWN.disconnect();
+    }  
+    function onConnectionLost_MACHINE_SHUTDOWN(responseObject4) {
+       if (responseObject4.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject4.errorMessage);
+    }
+    function onConnect_MACHINE_SHUTDOWN() {
+       // Once a connection has been made, make a subscription and send a message.
+       console.log("Connected ");
+       mqtt_MACHINE_SHUTDOWN.subscribe("printer/ldo300kit/moonraker/api/response");
+       message_MACHINE_SHUTDOWN = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "machine.shutdown","id": 4665}');
+       message_MACHINE_SHUTDOWN.destinationName = "printer/ldo300kit/moonraker/api/request";
+       message_MACHINE_SHUTDOWN.qos = 0;
+       message_MACHINE_SHUTDOWN.retained = false;
+       mqtt_MACHINE_SHUTDOWN.send(message_MACHINE_SHUTDOWN);
+    }
+    function onFailure_MACHINE_SHUTDOWN(mess4) {
+       console.log("Connected Attempt to Host "+host+" Failed");
+       setTimeout(MQTTconnect_MACHINE_SHUTDOWN(), reconnectTimeout);
+    }
+    function MQTTconnect_MACHINE_SHUTDOWN() {
+       console.log("connecting to "+ host +" "+ port);
+       mqtt_MACHINE_SHUTDOWN = new Paho.MQTT.Client(host,port,"MACHINE_SHUTDOWN");
+       fetch(url1, myInit)
+           .then(response => response.json())
+           .then(json => {
+                var options4 = {
+                    //useSSL:true,
+                    timeout: 3,
+                    userName: json.user_name,
+                    password: json.password,
+                    onSuccess: onConnect_MACHINE_SHUTDOWN,
+                    onFailure: onFailure_MACHINE_SHUTDOWN
+                };
+                mqtt_MACHINE_SHUTDOWN.onMessageArrived = onMessageArrived_MACHINE_SHUTDOWN;
+                mqtt_MACHINE_SHUTDOWN.onConnectionLost = onConnectionLost_MACHINE_SHUTDOWN;
+                mqtt_MACHINE_SHUTDOWN.connect(options4); //connect
+            })
+            .catch((error4) => {
+                console.error('Error:', error4);
+            });      
+    }     
     // Klipper SHUTDOWN macro!
+    function onMessageArrived_SHUTDOWN(msg8) {
+        out_msg="Message received "+msg8.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg8.destinationName;
+        console.log(out_msg);
+        mqtt_SHUTDOWN.disconnect();
+    }  
+    function onConnectionLost_SHUTDOWN(responseObject5) {
+       if (responseObject5.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject5.errorMessage);
+    }
     function onConnect_SHUTDOWN() {
        // Once a connection has been made, make a subscription and send a message.
        console.log("Connected ");
+       mqtt_SHUTDOWN.subscribe("printer/ldo300kit/moonraker/api/response");
        message_SHUTDOWN = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "printer.gcode.script","params": {"script": "SHUTDOWN"},"id": 507466}');
        message_SHUTDOWN.destinationName = "printer/ldo300kit/moonraker/api/request";
+       message_SHUTDOWN.qos = 0;
+       message_SHUTDOWN.retained = false;
        mqtt_SHUTDOWN.send(message_SHUTDOWN);
     }
-    function onFailure_SHUTDOWN(messag) {
+    function onFailure_SHUTDOWN(mess5) {
        console.log("Connected Attempt to Host "+host+" Failed");
-       setTimeout(MQTTconnect_SHUTDOWN, reconnectTimeout);
+       setTimeout(MQTTconnect_SHUTDOWN(), reconnectTimeout);
     }
     function MQTTconnect_SHUTDOWN() {
        console.log("connecting to "+ host +" "+ port);
@@ -66,68 +316,93 @@
        fetch(url1, myInit)
            .then(response => response.json())
            .then(json => {
-                var options = {
+                var options5 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_SHUTDOWN,
-                    onFailure: onFailure_SHUTDOWN,
+                    onFailure: onFailure_SHUTDOWN
                 };
-                mqtt_SHUTDOWN.onMessageArrived = onMessageArrived;
-                mqtt_SHUTDOWN.connect(options); //connect
+                mqtt_SHUTDOWN.onMessageArrived = onMessageArrived_SHUTDOWN;
+                mqtt_SHUTDOWN.onConnectionLost = onConnectionLost_SHUTDOWN;
+                mqtt_SHUTDOWN.connect(options5); //connect
             })
-            .catch((error) => {
-                console.error('Error:', error);
+            .catch((error5) => {
+                console.error('Error:', error5);
             });      
     } 
-    
     // Tasmota firmware - Turn OFF Raspberry_Pi_PSU
+    function onMessageArrived_Raspberry_Pi_PSU(msg9) {
+        out_msg="Message received "+msg9.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg9.destinationName;
+        console.log(out_msg);
+        mqtt_Raspberry_Pi_PSU.disconnect();
+    }  
+    function onConnectionLost_Raspberry_Pi_PSU(responseObject6) {
+       if (responseObject6.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject6.errorMessage);
+    }
     function onConnect_Raspberry_Pi_PSU() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("Connected ");
-        message_Raspberry_Pi_PSU = new Paho.MQTT.Message("OFF");
+        mqtt_Raspberry_Pi_PSU.subscribe("stat/Raspberry_Pi/Power");
+        message_Raspberry_Pi_PSU = new Paho.MQTT.Message(payload_Raspberry_Pi_PSU);
         message_Raspberry_Pi_PSU.destinationName = "cmnd/Raspberry_Pi/Power";
+        message_Raspberry_Pi_PSU.qos = 0;
+        message_Raspberry_Pi_PSU.retained = false;
         mqtt_Raspberry_Pi_PSU.send(message_Raspberry_Pi_PSU);
     }
-    function onFailure_Raspberry_Pi_PSU(messag) {
+    function onFailure_Raspberry_Pi_PSU(mess6) {
         console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_Raspberry_Pi_PSU, reconnectTimeout);
+        setTimeout(MQTTconnect_Raspberry_Pi_PSU(), reconnectTimeout);
     }
     function MQTTconnect_Raspberry_Pi_PSU() {
         console.log("connecting to "+ host +" "+ port);
-        mqtt_Raspberry_Pi_PSU = new Paho.MQTT.Client(host,port,"Raspberry_Pi");
+        mqtt_Raspberry_Pi_PSU = new Paho.MQTT.Client(host,port,"Raspberry_Pi-1");
         fetch(url2, myInit)
            .then(response => response.json())
            .then(json => {
-                var options = {
+                var options6 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_Raspberry_Pi_PSU,
-                    onFailure: onFailure_Raspberry_Pi_PSU,
+                    onFailure: onFailure_Raspberry_Pi_PSU
                 };
-                mqtt_Raspberry_Pi_PSU.onMessageArrived = onMessageArrived;
-                mqtt_Raspberry_Pi_PSU.connect(options); //connect
+                mqtt_Raspberry_Pi_PSU.onMessageArrived = onMessageArrived_Raspberry_Pi_PSU;
+                mqtt_Raspberry_Pi_PSU.onConnectionLost = onConnectionLost_Raspberry_Pi_PSU;
+                mqtt_Raspberry_Pi_PSU.connect(options6); //connect
             })
-            .catch((error) => {
-                console.error('Error:', error);
+            .catch((error6) => {
+                console.error('Error:', error6);
             });
     }
-        
     // Klipper BOOT macro!
+    function onMessageArrived_BOOT(msg10) {
+        out_msg="Message received "+msg10.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg10.destinationName;
+        console.log(out_msg);
+        mqtt_BOOT.disconnect();
+    }  
+    function onConnectionLost_BOOT(responseObject7) {
+       if (responseObject7.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject7.errorMessage);
+    }
     function onConnect_BOOT() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("Connected ");
         mqtt_BOOT.subscribe("printer/ldo300kit/moonraker/api/response");
         message_BOOT = new Paho.MQTT.Message('{"jsonrpc": "2.0","method": "printer.gcode.script","params": {"script": "BOOT"},"id": 607466}');
         message_BOOT.destinationName = "printer/ldo300kit/moonraker/api/request";
+        message_BOOT.qos = 0;
+        message_BOOT.retained = false;
         mqtt_BOOT.send(message_BOOT);
     }
-    function onFailure_BOOT(messag) {
+    function onFailure_BOOT(mess7) {
         console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_BOOT, reconnectTimeout);
+        setTimeout(MQTTconnect_BOOT(), reconnectTimeout);
     }
     function MQTTconnect_BOOT() {
         console.log("connecting to "+ host +" "+ port);
@@ -135,229 +410,255 @@
         fetch(url1, myInit)
            .then(response => response.json())
            .then(json => {
-                var options = {
+                var options7 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_BOOT,
-                    onFailure: onFailure_BOOT,
+                    onFailure: onFailure_BOOT
                 };
-                mqtt_BOOT.onMessageArrived = onMessageArrived;
-                mqtt_BOOT.connect(options); //connect
+                mqtt_BOOT.onMessageArrived = onMessageArrived_BOOT;
+                mqtt_BOOT.onConnectionLost = onConnectionLost_BOOT;
+                mqtt_BOOT.connect(options7); //connect
             })
-            .catch((error) => {
-                console.error('Error:', error);
+            .catch((error7) => {
+                console.error('Error:', error7);
             });      
     }
-    
-    // Tasmota firmware - Turn ON Raspberry_Pi_PSU
-    function onConnect_Raspberry_Pi_PSU2() {
-        // Once a connection has been made, make a subscription and send a message.
-        console.log("Connected ");
-        mqtt_Raspberry_Pi_PSU2.subscribe("stat/Raspberry_Pi/Power");
-        message_Raspberry_Pi_PSU2 = new Paho.MQTT.Message("ON");
-        message_Raspberry_Pi_PSU2.destinationName = "cmnd/Raspberry_Pi/Power";
-        mqtt_Raspberry_Pi_PSU2.send(message_Raspberry_Pi_PSU2);
-    }
-    function onFailure_Raspberry_Pi_PSU2(messag) {
-        console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_Raspberry_Pi_PSU2, reconnectTimeout);
-    }
-    function MQTTconnect_Raspberry_Pi_PSU2() {
-        console.log("connecting to "+ host +" "+ port);
-        mqtt_Raspberry_Pi_PSU2 = new Paho.MQTT.Client(host,port,"Raspberry_Pi");
-        fetch(url2, myInit)
-           .then(response => response.json())
-           .then(json => {
-                var options = {
-                    //useSSL:true,
-                    timeout: 3,
-                    userName: json.user_name,
-                    password: json.password,
-                    onSuccess: onConnect_Raspberry_Pi_PSU2,
-                    onFailure: onFailure_Raspberry_Pi_PSU2,
-                };
-                mqtt_Raspberry_Pi_PSU2.onMessageArrived = onMessageArrived;
-                mqtt_Raspberry_Pi_PSU2.connect(options); //connect
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-    }
-     
     // Tasmota firmware - Turn ON ESP1_PSU
+    function onMessageArrived_ESP1_PSU(msg11) {
+        out_msg="Message received "+msg11.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg11.destinationName;
+        console.log(out_msg);
+        mqtt_ESP1_PSU.disconnect();
+    } 
+    function onConnectionLost_ESP1_PSU(responseObject8) {
+       if (responseObject8.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject8.errorMessage);
+    }
     function onConnect_ESP1_PSU() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("Connected ");
         mqtt_ESP1_PSU.subscribe("stat/ESP1_PSU/Power");
-        message_ESP1_PSU = new Paho.MQTT.Message("ON");
+        message_ESP1_PSU = new Paho.MQTT.Message(payload_ESP1_PSU);
         message_ESP1_PSU.destinationName = "cmnd/ESP1_PSU/Power";
+        message_ESP1_PSU.qos = 0;
+        message_ESP1_PSU.retained = false;
         mqtt_ESP1_PSU.send(message_ESP1_PSU);
     }
-    function onFailure_ESP1_PSU(messag) {
+    function onFailure_ESP1_PSU(mess8) {
         console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_ESP1_PSU, reconnectTimeout);
+        setTimeout(MQTTconnect_ESP1_PSU(), reconnectTimeout);
     }
     function MQTTconnect_ESP1_PSU() {
         console.log("connecting to "+ host +" "+ port);
-        mqtt_ESP1_PSU = new Paho.MQTT.Client(host,port,"ESP1_PSU");
+        mqtt_ESP1_PSU = new Paho.MQTT.Client(host,port,"ESP1_PSU-1");
         fetch(url3, myInit)
            .then(response => response.json())
            .then(json => {
-                var options = {
+                var options8 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_ESP1_PSU,
-                    onFailure: onFailure_ESP1_PSU,
+                    onFailure: onFailure_ESP1_PSU
                 };
-                mqtt_ESP1_PSU.onMessageArrived = onMessageArrived;
-                mqtt_ESP1_PSU.connect(options); //connect
+                mqtt_ESP1_PSU.onMessageArrived = onMessageArrived_ESP1_PSU;
+                mqtt_ESP1_PSU.onConnectionLost = onConnectionLost_ESP1_PSU;
+                mqtt_ESP1_PSU.connect(options8); //connect
             })
-           .catch((error) => {
-              console.error('Error:', error);
+           .catch((error8) => {
+              console.error('Error:', error8);
             });
     }
-          
     // Tasmota firmware - Turn ON _ESP2_PSU
+    function onMessageArrived_ESP2_PSU(msg12) {
+        out_msg="Message received "+msg12.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg12.destinationName;
+        console.log(out_msg);
+        mqtt_ESP2_PSU.disconnect();
+    }  
+    function onConnectionLost_ESP2_PSU(responseObject9) {
+       if (responseObject9.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject9.errorMessage);
+    }
     function onConnect_ESP2_PSU() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("Connected ");
         mqtt_ESP2_PSU.subscribe("stat/ESP2_PSU/Power");
-        message_ESP2_PSU = new Paho.MQTT.Message("ON");
+        message_ESP2_PSU = new Paho.MQTT.Message(payload_ESP2_PSU);
         message_ESP2_PSU.destinationName = "cmnd/ESP2_PSU/Power";
+        message_ESP2_PSU.qos = 0;
+        message_ESP2_PSU.retained = false;
         mqtt_ESP2_PSU.send(message_ESP2_PSU);
     }
-    function onFailure_ESP2_PSU(messag) {
+    function onFailure_ESP2_PSU(mess9) {
         console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_ESP2_PSU, reconnectTimeout);
+        setTimeout(MQTTconnect_ESP2_PSU(), reconnectTimeout);
     }
     function MQTTconnect_ESP2_PSU() {
          console.log("connecting to "+ host +" "+ port);
-         mqtt_ESP2_PSU = new Paho.MQTT.Client(host,port,"ESP2_PSU");
+         mqtt_ESP2_PSU = new Paho.MQTT.Client(host,port,"ESP2_PSU-1");
          fetch(url4, myInit)
            .then(response => response.json())
            .then(json => {
-                 var options = {
+                 var options9 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_ESP2_PSU,
-                    onFailure: onFailure_ESP2_PSU,
+                    onFailure: onFailure_ESP2_PSU
                 };
-                mqtt_ESP2_PSU.onMessageArrived = onMessageArrived;
-                mqtt_ESP2_PSU.connect(options); //connect
+                mqtt_ESP2_PSU.onMessageArrived = onMessageArrived_ESP2_PSU;
+                mqtt_ESP2_PSU.onConnectionLost = onConnectionLost_ESP2_PSU;
+                mqtt_ESP2_PSU.connect(options9); //connect
             })
-           .catch((error) => {
-              console.error('Error:', error);
+           .catch((error9) => {
+              console.error('Error:', error9);
            });      
     } 
-
     // Tasmota firmware - Turn ON _IR_PSU
+    function onMessageArrived_IR_PSU(msg5) {
+        out_msg="Message received "+msg5.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg5.destinationName;
+        console.log(out_msg);
+        mqtt_IR_PSU.disconnect();
+    }
+    function onConnectionLost_IR_PSU(responseObject10) {
+       if (responseObject10.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject10.errorMessage);
+    }
     function onConnect_IR_PSU() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("Connected ");
         mqtt_IR_PSU.subscribe("stat/IR_PSU/Power");
-        message_IR_PSU = new Paho.MQTT.Message("ON");
+        message_IR_PSU = new Paho.MQTT.Message(payload_IR_PSU);
         message_IR_PSU.destinationName = "cmnd/IR_PSU/Power";
+        message_IR_PSU.qos = 0;
+        message_IR_PSU.retained = false;
         mqtt_IR_PSU.send(message_IR_PSU);
     }
-    function onFailure_IR_PSU(messag) {
+    function onFailure_IR_PSU(mess10) {
         console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_IR_PSU, reconnectTimeout);
+        setTimeout(MQTTconnect_IR_PSU(), reconnectTimeout);
     }
     function MQTTconnect_IR_PSU() {
         console.log("connecting to "+ host +" "+ port);
-        mqtt_IR_PSU = new Paho.MQTT.Client(host,port,"IR_PSU");
+        mqtt_IR_PSU = new Paho.MQTT.Client(host,port,"IR_PSU-1");
         fetch(url5, myInit)
            .then(response => response.json())
            .then(json => {
-                var options = {
+                var options10 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_IR_PSU,
-                    onFailure: onFailure_IR_PSU,
+                    onFailure: onFailure_IR_PSU
                 };
-                mqtt_IR_PSU.onMessageArrived = onMessageArrived;
-                mqtt_IR_PSU.connect(options); //connect
+                mqtt_IR_PSU.onMessageArrived = onMessageArrived_IR_PSU;
+                mqtt_IR_PSU.onConnectionLost = onConnectionLost_IR_PSU;
+                mqtt_IR_PSU.connect(options10); //connect
             })
-           .catch((error) => {
-              console.error('Error:', error);
+           .catch((error10) => {
+              console.error('Error:', error10);
             });           
     } 
-
     // Tasmota firmware - Turn ON _RGB_PSU
+    function onMessageArrived_RGB_PSU(msg13) {
+        out_msg="Message received "+msg13.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg13.destinationName;
+        console.log(out_msg);
+        mqtt_RGB_PSU.disconnect();
+    }  
+    function onConnectionLost_RGB_PSU(responseObject11) {
+       if (responseObject11.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject11.errorMessage);
+    }
     function onConnect_RGB_PSU() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("Connected ");
         mqtt_RGB_PSU.subscribe("stat/WLED1_15Amp_PSU/Power");
-        message_RGB_PSU = new Paho.MQTT.Message("ON");
+        message_RGB_PSU = new Paho.MQTT.Message(payload_RGB_PSU);
         message_RGB_PSU.destinationName = "cmnd/WLED1_15Amp_PSU/Power";
+        message_RGB_PSU.qos = 0;
+        message_RGB_PSU.retained = false;        
         mqtt_RGB_PSU.send(message_RGB_PSU);
     }
-    function onFailure_RGB_PSU(messag) {
+    function onFailure_RGB_PSU(mess11) {
         console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_RGB_PSU, reconnectTimeout);
+        setTimeout(MQTTconnect_RGB_PSU(), reconnectTimeout);
     }
     function MQTTconnect_RGB_PSU() {
         console.log("connecting to "+ host +" "+ port);
-        mqtt_RGB_PSU = new Paho.MQTT.Client(host,port,"WLED1_15Amp_PSU");
+        mqtt_RGB_PSU = new Paho.MQTT.Client(host,port,"WLED1_15Amp_PSU-1");
         fetch(url6, myInit)
            .then(response => response.json())
            .then(json => {
-                var options = {
+                var options11 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_RGB_PSU,
-                    onFailure: onFailure_RGB_PSU,
+                    onFailure: onFailure_RGB_PSU
                 };
-                mqtt_RGB_PSU.onMessageArrived = onMessageArrived;
-                mqtt_RGB_PSU.connect(options); //connect
+                mqtt_RGB_PSU.onMessageArrived = onMessageArrived_RGB_PSU;
+                mqtt_RGB_PSU.onConnectionLost = onConnectionLost_RGB_PSU;
+                mqtt_RGB_PSU.connect(options11); //connect
             })
-            .catch((error) => {
-              console.error('Error:', error);
+            .catch((error11) => {
+              console.error('Error:', error11);
             });   
     } 
-
     // Tasmota firmware - Turn ON _RGB2
+    function onMessageArrived_RGB2_PSU(msg14) {
+        out_msg="Message received "+msg14.payloadString+"<br>";
+        out_msg=out_msg+"Message received Topic "+msg14.destinationName;
+        console.log(out_msg);
+        mqtt_RGB2_PSU.disconnect();
+    }  
+    function onConnectionLost_RGB2_PSU(responseObject12) {
+       if (responseObject12.errorCode !== 0)
+	      console.log("onConnectionLost:"+responseObject12.errorMessage);
+    }
     function onConnect_RGB2_PSU() {
         // Once a connection has been made, make a subscription and send a message.
         console.log("Connected ");
-        mqtt_RGB2_PSU.subscribe("stat/WLED2_10Amp_PSU/Power");
-        message_RGB2_PSU = new Paho.MQTT.Message("ON");
+        //mqtt_RGB2_PSU.subscribe("stat/WLED2_10Amp_PSU/Power");
+        message_RGB2_PSU = new Paho.MQTT.Message(payload_RGB2_PSU);
         message_RGB2_PSU.destinationName = "cmnd/WLED2_10Amp_PSU/Power";
+        message_RGB2_PSU.qos = 0;
+        message_RGB2_PSU.retained = false;    
         mqtt_RGB2_PSU.send(message_RGB2_PSU);
     }
-    function onFailure_RGB2_PSU(messag) {
+    function onFailure_RGB2_PSU(mess12) {
         console.log("Connected Attempt to Host "+host+" Failed");
-        setTimeout(MQTTconnect_RGB2_PSU, reconnectTimeout);
+        setTimeout(MQTTconnect_RGB2_PSU(), reconnectTimeout);
     }
     function MQTTconnect_RGB2_PSU() {
         console.log("connecting to "+ host +" "+ port);
-        mqtt_RGB2_PSU = new Paho.MQTT.Client(host,port,"WLED2_10Amp_PSU");
+        mqtt_RGB2_PSU = new Paho.MQTT.Client(host,port,"WLED2_10Amp_PSU-1");
         fetch(url7, myInit)
            .then(response => response.json())
            .then(json => {
-                var options = {
+                var options12 = {
                     //useSSL:true,
                     timeout: 3,
                     userName: json.user_name,
                     password: json.password,
                     onSuccess: onConnect_RGB2_PSU,
-                    onFailure: onFailure_RGB2_PSU,
+                    onFailure: onFailure_RGB2_PSU
                 };
-                mqtt_RGB2_PSU.onMessageArrived = onMessageArrived;
-                mqtt_RGB2_PSU.connect(options); //connect
+                mqtt_RGB2_PSU.onMessageArrived = onMessageArrived_RGB2_PSU;
+                mqtt_RGB2_PSU.onConnectionLost = onConnectionLost_RGB2_PSU;
+                mqtt_RGB2_PSU.connect(options12); //connect
             })
-           .catch((error) => {
-              console.error('Error:', error);
+           .catch((error12) => {
+              console.error('Error:', error12);
             });        
     }      
       </script>
@@ -523,7 +824,7 @@
 
   /*-- add addition php files below --*/
 
-  $(document).ready(function() {
+  $(document).ready(function(){
     $('#on').click(function(){  
     var a = new XMLHttpRequest();
     a.open("GET", "http://192.168.1.154:7990/on.php");
@@ -536,7 +837,6 @@
     a.send();
     });
   });
-
   $(document).ready(function(){ 
     $('#off').click(function(){
     var b = new XMLHttpRequest();
@@ -550,8 +850,6 @@
     b.send();
     });
   }); 
-
-
   $(document).ready(function(){
     $('#reset').click(function(){
     var c = new XMLHttpRequest();
@@ -616,6 +914,7 @@
     ON
 
   */
+ 
   $(document).ready(function(){
      $("#printer_on").click(function(){
        WARN.innerHTML='<h1> <span class="blck bold"> BOOTING the Printer</span><span class="bold">, ensure the</span> <span class="red bold yellow-background"> BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">RELEASED!</span></h1>'
@@ -624,31 +923,38 @@
         setTimeout(function() {
           WARN.style.display = 'none';
         }, (10 * 1000));
-        MQTTconnect_Raspberry_Pi_PSU2();
         ///wait 2 secounds;
         setTimeout(function() {
+            payload_ESP1_PSU="ON";
             MQTTconnect_ESP1_PSU();
         }, (2 * 1000));
-        ///wait 3 secounds;
-        setTimeout(function() {
-            MQTTconnect_ESP2_PSU();
-        }, (3 * 1000));
         ///wait 4 secounds;
         setTimeout(function() {
-            MQTTconnect_IR_PSU();
+            payload_ESP2_PSU="ON";
+            MQTTconnect_ESP2_PSU();
         }, (4 * 1000));
-        ///wait 5 secounds;
-        setTimeout(function() {
-            MQTTconnect_RGB_PSU();
-        }, (5 * 1000));
         ///wait 6 secounds;
         setTimeout(function() {
-            MQTTconnect_RGB2_PSU();
+            payload_IR_PSU="ON";
+            MQTTconnect_IR_PSU();
         }, (6 * 1000));
-        ///wait 30 secounds;
+        ///wait 8 secounds;
+        setTimeout(function() {
+            payload_RGB_PSU="ON";
+            MQTTconnect_RGB_PSU();
+        }, (8 * 1000));
+        ///wait 10 secounds;
+        setTimeout(function() {
+            payload_RGB2_PSU="ON";
+            MQTTconnect_RGB2_PSU();
+        }, (10 * 1000));
+        payload_Raspberry_Pi_PSU="ON";
+        MQTTconnect_Raspberry_Pi_PSU();
+        ///wait 50 secounds;
         setTimeout(function() {
             mainsail_btn_Window = window.open('http://192.168.1.154:7991', '_blank');
-        }, (30 * 1000)); 
+        }, (50 * 1000)); 
+
       });
    });
 
@@ -662,7 +968,7 @@
   need to install paho-mqtt via "pip3 install paho-mqtt"
   need to include [mqtt] section in moonraker and enable cors_domains: in moonraker
 
-  #execute Klipper SHUTDOWN macro via MQTT!
+  #execute Klipper SHUTDOWN macro via MQTT! - this turns the lights off on the printer
   SUBSCRIBE: printer/ldo300kit/moonraker/api/response
   PUBLSIH: printer/ldo300kit/moonraker/api/request
   {
@@ -672,6 +978,20 @@
           "script": "SHUTDOWN"
       },
       "id": 507466}
+    
+    #Turn off _RGB2_PSU
+    
+    #Turn off _RGB_PSU
+    
+    #Turn off _IR_PSU
+    
+    #Turn off _ESP2_PSU
+    
+    #Turn off _ESP1_PSU
+    
+    #Stop the klipper service
+    
+    #call Machine.shutdown
     
   #turn off Raspberry_Pi_PSU via MQTT to tasmota firmware
   SUBSCRIBE: stat/Raspberry_Pi/Power
@@ -696,8 +1016,45 @@
              fluidd_btn_Window.close(); 
           }
         }, (2 * 1000));
-        //wait 32 secounds;
+        //wait 4 secounds;
         setTimeout(function() {
+           payload_RGB2_PSU="OFF";
+           MQTTconnect_RGB2_PSU();
+        }, (4 * 1000));
+        ///wait 6 secounds;
+        setTimeout(function() {
+            payload_RGB_PSU="OFF";
+            MQTTconnect_RGB_PSU();
+        }, (6 * 1000));
+        ///wait 8 secounds;
+        setTimeout(function() {
+            payload_IR_PSU="OFF";
+            MQTTconnect_IR_PSU();
+        }, (8 * 1000));
+        ///wait 10 secounds;
+        setTimeout(function() {
+            payload_ESP2_PSU="OFF";
+            MQTTconnect_ESP2_PSU();
+        }, (10 * 1000));
+        ///wait 12 secounds;
+        setTimeout(function() {
+            payload_ESP1_PSU="OFF";
+            MQTTconnect_ESP1_PSU();
+        }, (12 * 1000)); 
+        ///Stop the klipper service
+        ///Wait 14 seconds
+        setTimeout(function() {
+            MQTTconnect_KLIPPER_SERVICE_STOP();
+        }, (14 * 1000)); 
+        ///call machine.shutdown
+        ///Wait 17 seconds
+        setTimeout(function() {
+            MQTTconnect_MACHINE_SHUTDOWN();
+        }, (17 * 1000)); 
+        // turn off the power supply that controls the SSD and the raspberry pi 4B
+        //wait 47 secounds or 30 seconds after MQTTconnect_MACHINE_SHUTDOWN is called;
+        setTimeout(function() {
+            payload_Raspberry_Pi_PSU="OFF";
             MQTTconnect_Raspberry_Pi_PSU();
             WARN.innerHTML='<h1> <span class="blck bold">After Printer has SHUTDOWN, ensure the </span><span class="red bold yellow-background">BIG RED Button</span><span class="bold"> has been manually </span><span class="red bold yellow-background">PRESSED IN!</span> </h1>'
             WARN.style.display = 'block';
@@ -705,7 +1062,7 @@
             setTimeout(function() {
                WARN.style.display = 'none';
             }, (10 * 1000));
-        }, (32 * 1000));
+        }, (47 * 1000));
      });
   });
 
