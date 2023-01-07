@@ -1004,7 +1004,7 @@
      $("#printer_off").click(function(){
         WARN.innerHTML='<h1> <span class="red bold yellow-background">SHUTTING DOWN</span><span class="blck bold">, the Printer!</span> </h1>'
         WARN.style.display = 'block';
-        //wait 2 secounds;
+        //wait 3 secounds;
         setTimeout(function() {
           WARN.style.display = 'none';
           MQTTconnect_SHUTDOWN();
@@ -1016,44 +1016,44 @@
           {
              fluidd_btn_Window.close(); 
           }
-        }, (2 * 1000));
-        //wait 4 secounds;
+        }, (3 * 1000));
+        //wait 60 secounds;
         setTimeout(function() {
            payload_RGB2_PSU="OFF";
            MQTTconnect_RGB2_PSU();
-        }, (4 * 1000));
-        ///wait 6 secounds;
+        }, (60 * 1000));
+        ///wait 4 secounds;
         setTimeout(function() {
             payload_RGB_PSU="OFF";
             MQTTconnect_RGB_PSU();
-        }, (6 * 1000));
-        ///wait 8 secounds;
+        }, (64 * 1000));
+        ///wait 6 secounds;
         setTimeout(function() {
             payload_IR_PSU="OFF";
             MQTTconnect_IR_PSU();
-        }, (8 * 1000));
-        ///wait 10 secounds;
+        }, (66 * 1000));
+        ///wait 8 secounds;
         setTimeout(function() {
             payload_ESP2_PSU="OFF";
             MQTTconnect_ESP2_PSU();
-        }, (10 * 1000));
-        ///wait 12 secounds;
+        }, (68 * 1000));
+        ///wait 10 secounds;
         setTimeout(function() {
             payload_ESP1_PSU="OFF";
             MQTTconnect_ESP1_PSU();
-        }, (12 * 1000)); 
+        }, (70 * 1000)); 
         ///Stop the klipper service
-        ///Wait 14 seconds
+        ///Wait 12 seconds
         setTimeout(function() {
             MQTTconnect_KLIPPER_SERVICE_STOP();
-        }, (14 * 1000)); 
+        }, (72 * 1000)); 
         ///call machine.shutdown
-        ///Wait 17 seconds
+        ///Wait 14 seconds
         setTimeout(function() {
             MQTTconnect_MACHINE_SHUTDOWN();
-        }, (17 * 1000)); 
+        }, (74 * 1000)); 
         // turn off the power supply that controls the SSD and the raspberry pi 4B
-        //wait 47 secounds or 30 seconds after MQTTconnect_MACHINE_SHUTDOWN is called;
+        //wait 104 secounds or 30 seconds after MQTTconnect_MACHINE_SHUTDOWN is called;
         setTimeout(function() {
             payload_Raspberry_Pi_PSU="OFF";
             MQTTconnect_Raspberry_Pi_PSU();
@@ -1063,7 +1063,7 @@
             setTimeout(function() {
                WARN.style.display = 'none';
             }, (10 * 1000));
-        }, (47 * 1000));
+        }, (104 * 1000));
      });
   });
 
